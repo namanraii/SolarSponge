@@ -1,0 +1,512 @@
+{
+  "config_hash": "5d0394443738b54a",
+  "mode": "quick",
+  "n_days": 2,
+  "n_seeds": 1,
+  "emission_factor_t_per_mwh": 0.675,
+  "emission_factor_source": "CEA CO2 Baseline Database v22.0, Table S, FY 2025-26 weighted average incl. RES & captive",
+  "summary": {
+    "S0": {
+      "name": "baseline",
+      "absorbed_kwh_mean": 0.0,
+      "absorbed_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "curtailment_avoided_kwh_mean": 0.0,
+      "curtailment_avoided_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "co2_avoided_t_mean": 0.0,
+      "hard_constraint_violations": 2,
+      "n_days": 2,
+      "by_weather_class": {
+        "overcast": 0.0,
+        "monsoon": 0.0
+      }
+    },
+    "S1": {
+      "name": "oracle",
+      "absorbed_kwh_mean": 0.0,
+      "absorbed_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "curtailment_avoided_kwh_mean": 0.0,
+      "curtailment_avoided_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "co2_avoided_t_mean": 0.0,
+      "hard_constraint_violations": 0,
+      "n_days": 2,
+      "by_weather_class": {
+        "overcast": 0.0,
+        "monsoon": 0.0
+      }
+    },
+    "S2": {
+      "name": "solarsponge_p50",
+      "absorbed_kwh_mean": 0.0,
+      "absorbed_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "curtailment_avoided_kwh_mean": 0.0,
+      "curtailment_avoided_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "co2_avoided_t_mean": 0.0,
+      "hard_constraint_violations": 0,
+      "n_days": 2,
+      "by_weather_class": {
+        "overcast": 0.0,
+        "monsoon": 0.0
+      }
+    },
+    "S3": {
+      "name": "solarsponge_risk_aware",
+      "absorbed_kwh_mean": 0.0,
+      "absorbed_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "curtailment_avoided_kwh_mean": 0.0,
+      "curtailment_avoided_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "co2_avoided_t_mean": 0.0,
+      "hard_constraint_violations": 0,
+      "n_days": 2,
+      "by_weather_class": {
+        "overcast": 0.0,
+        "monsoon": 0.0
+      }
+    },
+    "S4": {
+      "name": "greedy_heuristic",
+      "absorbed_kwh_mean": 0.0,
+      "absorbed_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "curtailment_avoided_kwh_mean": 0.0,
+      "curtailment_avoided_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "co2_avoided_t_mean": 0.0,
+      "hard_constraint_violations": 2,
+      "n_days": 2,
+      "by_weather_class": {
+        "overcast": 0.0,
+        "monsoon": 0.0
+      }
+    },
+    "S5": {
+      "name": "naive_noon_shift",
+      "absorbed_kwh_mean": 0.0,
+      "absorbed_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "curtailment_avoided_kwh_mean": 0.0,
+      "curtailment_avoided_kwh_ci95": [
+        0.0,
+        0.0
+      ],
+      "co2_avoided_t_mean": 0.0,
+      "hard_constraint_violations": 0,
+      "n_days": 2,
+      "by_weather_class": {
+        "overcast": 0.0,
+        "monsoon": 0.0
+      }
+    }
+  },
+  "by_scenario": {
+    "S0": [
+      {
+        "status": "Fallback",
+        "fallback_reason": "baseline",
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2829.5769814644495,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 5508.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 1,
+          "solve_ms": 0,
+          "fallback": true,
+          "weather_class": "overcast"
+        },
+        "validation_notes": [
+          "pump_cluster_A unmet 60.1 kWh",
+          "pump_cluster_B unmet 60.1 kWh",
+          "cold_store_1 max-starts violated",
+          "hvac_precool temperature band"
+        ],
+        "day_index": 0,
+        "seed": 0,
+        "weather_class": "overcast"
+      },
+      {
+        "status": "Fallback",
+        "fallback_reason": "baseline",
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2703.7170435490725,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 5508.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 1,
+          "solve_ms": 0,
+          "fallback": true,
+          "weather_class": "monsoon"
+        },
+        "validation_notes": [
+          "cold_store_1 max-starts violated",
+          "cold_store_1 temperature band",
+          "hvac_precool temperature band"
+        ],
+        "day_index": 1,
+        "seed": 0,
+        "weather_class": "monsoon"
+      }
+    ],
+    "S1": [
+      {
+        "status": "Optimal",
+        "fallback_reason": null,
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2829.5769814644495,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 4778.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 0,
+          "solve_ms": 2085,
+          "fallback": false,
+          "weather_class": "overcast"
+        },
+        "validation_notes": [],
+        "day_index": 0,
+        "seed": 0,
+        "weather_class": "overcast"
+      },
+      {
+        "status": "Optimal",
+        "fallback_reason": null,
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2703.7170435490725,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 4068.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 0,
+          "solve_ms": 842,
+          "fallback": false,
+          "weather_class": "monsoon"
+        },
+        "validation_notes": [],
+        "day_index": 1,
+        "seed": 0,
+        "weather_class": "monsoon"
+      }
+    ],
+    "S2": [
+      {
+        "status": "Optimal",
+        "fallback_reason": null,
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2829.5769814644495,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 4753.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 0,
+          "solve_ms": 2079,
+          "fallback": false,
+          "weather_class": "overcast"
+        },
+        "validation_notes": [],
+        "day_index": 0,
+        "seed": 0,
+        "weather_class": "overcast"
+      },
+      {
+        "status": "Optimal",
+        "fallback_reason": null,
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2703.7170435490725,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 4023.5,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 0,
+          "solve_ms": 470,
+          "fallback": false,
+          "weather_class": "monsoon"
+        },
+        "validation_notes": [],
+        "day_index": 1,
+        "seed": 0,
+        "weather_class": "monsoon"
+      }
+    ],
+    "S3": [
+      {
+        "status": "Optimal",
+        "fallback_reason": null,
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2829.5769814644495,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 4728.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 0,
+          "solve_ms": 2072,
+          "fallback": false,
+          "weather_class": "overcast"
+        },
+        "validation_notes": [],
+        "day_index": 0,
+        "seed": 0,
+        "weather_class": "overcast"
+      },
+      {
+        "status": "Optimal",
+        "fallback_reason": null,
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2703.7170435490725,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 4123.5,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 0,
+          "solve_ms": 1399,
+          "fallback": false,
+          "weather_class": "monsoon"
+        },
+        "validation_notes": [],
+        "day_index": 1,
+        "seed": 0,
+        "weather_class": "monsoon"
+      }
+    ],
+    "S4": [
+      {
+        "status": "Fallback",
+        "fallback_reason": "greedy",
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2829.5769814644495,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 2918.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 1,
+          "solve_ms": 0,
+          "fallback": true,
+          "weather_class": "overcast"
+        },
+        "validation_notes": [
+          "ev_depot min-run violated",
+          "cold_store_1 temperature band",
+          "hvac_precool temperature band"
+        ],
+        "day_index": 0,
+        "seed": 0,
+        "weather_class": "overcast"
+      },
+      {
+        "status": "Fallback",
+        "fallback_reason": "greedy",
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2703.7170435490725,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 2733.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 1,
+          "solve_ms": 0,
+          "fallback": true,
+          "weather_class": "monsoon"
+        },
+        "validation_notes": [
+          "ev_depot min-run violated",
+          "cold_store_1 temperature band",
+          "hvac_precool temperature band"
+        ],
+        "day_index": 1,
+        "seed": 0,
+        "weather_class": "monsoon"
+      }
+    ],
+    "S5": [
+      {
+        "status": "Fallback",
+        "fallback_reason": "naive",
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2829.5769814644495,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 2918.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 0,
+          "solve_ms": 0,
+          "fallback": true,
+          "weather_class": "overcast"
+        },
+        "validation_notes": [
+          "cold_store_1 temperature band",
+          "hvac_precool temperature band"
+        ],
+        "day_index": 0,
+        "seed": 0,
+        "weather_class": "overcast"
+      },
+      {
+        "status": "Fallback",
+        "fallback_reason": "naive",
+        "kpis": {
+          "curtailed_s0_kwh": 0.0,
+          "curtailed_sx_kwh": 0.0,
+          "curtailment_avoided_kwh": 0.0,
+          "curtailment_avoided_pct": 0.0,
+          "absorbed_kwh": 0.0,
+          "shiftable_kwh": 2703.7170435490725,
+          "absorption_efficiency": 0.0,
+          "wasted_load_kwh": 2733.0,
+          "co2_avoided_t": 0.0,
+          "farmer_saving_inr": 0.0,
+          "constraint_violations": 0,
+          "solve_ms": 0,
+          "fallback": true,
+          "weather_class": "monsoon"
+        },
+        "validation_notes": [
+          "cold_store_1 temperature band",
+          "hvac_precool temperature band"
+        ],
+        "day_index": 1,
+        "seed": 0,
+        "weather_class": "monsoon"
+      }
+    ]
+  },
+  "generated_at": "2026-10-03T04:53:16.832072+00:00",
+  "ablations": {
+    "risk_milp": {
+      "absorbed_kwh_mean": 0.0,
+      "n": 2
+    },
+    "greedy": {
+      "absorbed_kwh_mean": 0.0,
+      "n": 2
+    },
+    "p50": {
+      "absorbed_kwh_mean": 0.0,
+      "n": 2
+    },
+    "oracle": {
+      "absorbed_kwh_mean": 0.0,
+      "n": 2
+    },
+    "virtual_battery": {
+      "absorbed_kwh_mean": 0.0,
+      "n": 2
+    }
+  },
+  "sensitivity": {
+    "evac_limit_frac": [
+      {
+        "frac": 0.3,
+        "absorbed_kwh_mean": 2506.82731056627
+      },
+      {
+        "frac": 0.35,
+        "absorbed_kwh_mean": 2128.3814239172643
+      },
+      {
+        "frac": 0.5,
+        "absorbed_kwh_mean": 888.8861110118921
+      },
+      {
+        "frac": 0.7,
+        "absorbed_kwh_mean": 0.0
+      }
+    ],
+    "risk_quantile": [
+      {
+        "q": 0.1,
+        "absorbed_kwh_mean": 0.0
+      },
+      {
+        "q": 0.4,
+        "absorbed_kwh_mean": 0.0
+      },
+      {
+        "q": 0.7,
+        "absorbed_kwh_mean": 0.0
+      }
+    ]
+  }
+}

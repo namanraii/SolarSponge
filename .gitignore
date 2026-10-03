@@ -18,7 +18,11 @@ build/
 node_modules/
 web/.next/
 web/out/
-artifacts/
+artifacts/*
+!artifacts/.gitkeep
+!artifacts/eval.md
+!artifacts/eval.json
+!artifacts/backtest.json
 data/cache/
 *.parquet
 .idea/
@@ -28,5 +32,5 @@ replay/*.json
 .hypothesis/
 .pytest_cache/
 solarsponge.db
-artifacts/*.json
-artifacts/*.md
+web/test-results/
+web/playwright-report/

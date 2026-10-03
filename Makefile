@@ -10,7 +10,10 @@ demo:
 	python3 -m solarsponge.cli demo
 
 eval:
-	python3 -m solarsponge.cli eval --days 8 --out artifacts
+	python3 -m solarsponge.cli eval --quick --out artifacts
+
+eval-full:
+	python3 -m solarsponge.cli eval --full --out artifacts
 
 backtest:
 	python3 -m solarsponge.cli backtest

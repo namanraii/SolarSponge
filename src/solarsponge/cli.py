@@ -16,11 +16,15 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("demo", help="Build a deterministic one-day replay and print KPIs")
     ev = sub.add_parser("eval", help="Run scenario evaluation and write artifacts")
     ev.add_argument("--days", type=int, default=None)
+    ev.add_argument("--seeds", type=int, default=None)
     ev.add_argument("--out", default="artifacts")
+    ev.add_argument("--quick", action="store_true", default=True)
+    ev.add_argument("--full", action="store_true", default=False)
     sub.add_parser("backtest", help="Rolling-origin forecast backtest")
     sv = sub.add_parser("serve", help="Run the API")
     sv.add_argument("--host", default="0.0.0.0")
     sv.add_argument("--port", type=int, default=8000)
+    sv.add_argument("--tick", action="store_true", help="Enable 15-min APScheduler replan ticks")
     sub.add_parser("hash", help="Print config hash")
 
     args = p.parse_args(argv)
@@ -45,7 +49,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "eval":
         from solarsponge.kpi.report import run_evaluation, write_report
 
-        result = run_evaluation(settings, n_days=args.days)
+        result = run_evaluation(
+            settings,
+            n_days=args.days,
+            n_seeds=args.seeds,
+            full=args.full,
+            quick=not args.full,
+        )
         path = write_report(result, Path(args.out))
         print(path)
         print(json.dumps(result["summary"], indent=2, default=str))
@@ -58,8 +68,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.cmd == "serve":
+        import os
+
         import uvicorn
 
+        if args.tick:
+            os.environ["SOLARSPONGE_TICK"] = "1"
         uvicorn.run("solarsponge.api.app:app", host=args.host, port=args.port, reload=False)
         return 0
 

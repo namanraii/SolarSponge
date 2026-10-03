@@ -1,0 +1,11 @@
+{
+  "n_test_days": 4,
+  "mae_p50": 277.17664893290305,
+  "mae_b0": 354.50871145197044,
+  "mae_b1": 278.668290961147,
+  "skill_vs_b1": 0.005352751197845951,
+  "coverage_p10_p90": 0.8125,
+  "conformal_ok": true,
+  "backend": "empirical",
+  "beats_clearsky": true
+}
