@@ -148,15 +148,13 @@ class ToolLayer:
         overrides: dict | None = None,
     ) -> dict:
         overrides = overrides or {}
-        from datetime import timedelta
+        from datetime import datetime, timedelta, timezone as tz
 
         cloud = float(overrides.get("cloud_delta_pct") or 0)
         disabled = list(overrides.get("disabled_load_ids") or [])
         rq = overrides.get("risk_quantile")
         day_start = datetime.fromisoformat(self.store.replay["day_start"]) if self.store.replay else None
         if day_start is None:
-            from datetime import timezone as tz
-
             day_start = datetime(2026, 4, 15, tzinfo=tz.utc)
         twin = simulate_day(self.settings, day_start, day_index=14, cloud_delta_pct=cloud)
         fc_svc = self.fc_svc or ForecastService(self.settings)
@@ -170,6 +168,7 @@ class ToolLayer:
             risk_quantile=rq,
             disabled_load_ids=disabled,
             cloud_delta_pct=cloud,
+            rolling=False,
         )
         return {
             "dispatched": False,

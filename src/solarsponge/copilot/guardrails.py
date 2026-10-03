@@ -38,6 +38,8 @@ WRITE_PATTERNS = (
     "ignore constraints",
     "just run",
     "just turn",
+    "switch the",
+    "chargers on",
 )
 
 
@@ -46,8 +48,8 @@ def is_actuation_request(text: str) -> bool:
     if any(p in t for p in WRITE_PATTERNS):
         return True
     return bool(
-        re.search(r"\b(turn|switch|start|stop)\b.{0,40}\b(on|off|now)\b", t)
-        and re.search(r"\b(pump|load|compressor|charger|hvac|depot)\b", t)
+        re.search(r"\b(turn|switch|start|stop)\b.{0,40}\b(on|off|now|immediately)\b", t)
+        and re.search(r"\b(pump|load|compressor|chargers?|hvac|depot|ev)\b", t)
     )
 
 

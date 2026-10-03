@@ -54,6 +54,25 @@ class Copilot:
             }
 
         route = self._route(message)
+        plan = self.tools.get_plan(zone_id)
+        cache_key = None
+        if self.settings.copilot.cache_by_plan_id and plan and not plan.get("error"):
+            cache_key = f"{plan.get('plan_id')}:{route}:{message.strip().lower()}"
+            if cache_key in self.cache:
+                cached = json.loads(self.cache[cache_key])
+                cached["cached"] = True
+                return cached
+
+        key = os.environ.get("ANTHROPIC_API_KEY")
+        if key and self.settings.copilot.enabled:
+            try:
+                out = self._tool_loop(route, message, zone_id)
+                if cache_key:
+                    self.cache[cache_key] = json.dumps(out, default=str)
+                return out
+            except Exception:
+                pass
+
         calls = self._tool_plan(route, message, zone_id)
         blobs = []
         results = []
@@ -63,18 +82,22 @@ class Copilot:
             blobs.append(text)
             results.append({"name": name, "args": args, "result": raw})
 
-        answer = self._llm_or_template(route, message, results, zone_id)
+        answer = self._template(route, results, zone_id)
         ok, missing = faithfulness(answer, blobs + [json.dumps(results, default=str)])
         if not ok and missing:
-            # strip ungrounded numbers by falling back to the template
             answer = self._template(route, results, zone_id)
-        return {
+            ok, _ = faithfulness(answer, blobs + [json.dumps(results, default=str)])
+        out = {
             "role": route,
             "refusal": False,
             "answer": answer,
             "tool_calls": [{"name": c["name"], "args": c["args"]} for c in results],
             "faithful": ok,
+            "cached": False,
         }
+        if cache_key:
+            self.cache[cache_key] = json.dumps(out, default=str)
+        return out
 
     def _route(self, message: str) -> str:
         m = message.lower()
@@ -106,35 +129,62 @@ class Copilot:
             calls.append(("get_load_info", {"load_id": lid}))
         return calls[: self.settings.copilot.max_tool_calls]
 
-    def _llm_or_template(self, route, message, results, zone_id) -> str:
-        key = os.environ.get("ANTHROPIC_API_KEY")
-        if key and self.settings.copilot.enabled:
-            try:
-                return self._anthropic(route, message, results)
-            except Exception:
-                pass
-        return self._template(route, results, zone_id)
-
-    def _anthropic(self, route, message, results) -> str:
+    def _tool_loop(self, route: str, message: str, zone_id: str) -> dict[str, Any]:
         import anthropic
 
         model = (
             self.settings.copilot.model_whatif if route == "whatif" else self.settings.copilot.model_explainer
         )
         client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-        content = json.dumps(results, default=str)[:12000]
-        msg = client.messages.create(
-            model=model,
-            max_tokens=self.settings.copilot.max_output_tokens,
-            system=SYSTEM,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"User question: {message}\n\nTool results (JSON):\n{content}\n\nAnswer using only these numbers.",
-                }
-            ],
-        )
-        return msg.content[0].text
+        tools = [
+            {"name": s["name"], "description": s["description"], "input_schema": s["input_schema"]}
+            for s in TOOL_SCHEMAS
+        ]
+        messages: list[dict] = [{"role": "user", "content": message}]
+        results = []
+        blobs = []
+        answer = ""
+        for _ in range(self.settings.copilot.max_tool_calls):
+            msg = client.messages.create(
+                model=model,
+                max_tokens=self.settings.copilot.max_output_tokens,
+                system=SYSTEM,
+                tools=tools,
+                messages=messages,
+            )
+            tool_uses = [b for b in msg.content if getattr(b, "type", None) == "tool_use"]
+            texts = [b.text for b in msg.content if getattr(b, "type", None) == "text" and getattr(b, "text", None)]
+            if texts:
+                answer = texts[-1]
+            if not tool_uses or msg.stop_reason == "end_turn":
+                break
+            messages.append({"role": "assistant", "content": msg.content})
+            tool_results = []
+            for tu in tool_uses:
+                args = dict(tu.input or {})
+                args.setdefault("zone_id", zone_id)
+                raw = self.tools.call(tu.name, args)
+                text = sanitize_tool_text(json.dumps(raw, default=str))
+                blobs.append(text)
+                results.append({"name": tu.name, "args": args, "result": raw})
+                tool_results.append(
+                    {"type": "tool_result", "tool_use_id": tu.id, "content": text[:8000]}
+                )
+            messages.append({"role": "user", "content": tool_results})
+        if not answer:
+            answer = self._template(route, results, zone_id)
+        ok, _ = faithfulness(answer, blobs + [json.dumps(results, default=str)])
+        if not ok:
+            answer = self._template(route, results, zone_id)
+            ok, _ = faithfulness(answer, blobs + [json.dumps(results, default=str)])
+        return {
+            "role": route,
+            "refusal": False,
+            "answer": answer,
+            "tool_calls": [{"name": c["name"], "args": c["args"]} for c in results],
+            "faithful": ok,
+            "cached": False,
+        }
 
     def _template(self, route: str, results: list[dict], zone_id: str) -> str:
         by = {r["name"]: r["result"] for r in results}
@@ -161,10 +211,11 @@ class Copilot:
             info = by.get("get_load_info") or {}
             sch = next((s for s in plan.get("schedules", []) if s.get("load_id") == info.get("load_id")), None)
             when = _slot_on(sch or {}, self.settings) if sch else "see dashboard"
+            from solarsponge.notify.whatsapp import draft_notice
+
+            draft = draft_notice(info.get("name") or info.get("load_id") or "load", when, pid or 0, "en")
             return (
-                f"Farmer notice (draft, not sent). {info.get('name') or info.get('load_id')}: run {when}. "
-                f"This window is inside today's surplus forecast. Crop energy need is a hard constraint "
-                f"(unmet {info.get('unmet_kwh')} kWh). Plan {pid}."
+                f"{draft['body']} Unmet {info.get('unmet_kwh')} kWh. sent={draft['sent']}."
             )
         lines = [
             f"Plan {pid} for {zone_id} solved as {status} in {plan.get('solve_ms')} ms "
