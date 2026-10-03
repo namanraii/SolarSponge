@@ -66,6 +66,8 @@ optimizer:
     w_shortfall: 1000.0
   surplus_floor_kw: 30
   fallback: ["incumbent", "greedy", "default_schedule"]
+  use_virtual_battery: false
+  virtual_battery_min_devices: 200
 
 # ---------------- flexible loads ----------------
 loads:
@@ -133,6 +135,10 @@ evaluation:
   bootstrap_resamples: 2000
   weather_classes: [clear, partly_cloudy, overcast, monsoon]
   replay_days: 1
+  full_days: 30
+  full_seeds: 20
+  quick_days: 8
+  quick_seeds: 3
 
 economics:
   # CEA CO2 Baseline Database for the Indian Power Sector, Version 22.0 (August 2026).
@@ -152,3 +158,9 @@ ops:
   kill_switch: false
   demo_mode: true
   database_url: "sqlite:///./solarsponge.db"
+  redis_url: ""
+  api_key: ""
+  model_dir: "artifacts/models"
+  feature_store: "artifacts/features.parquet"
+  tick_enabled: false
+  peer_zone_ids: ["zone-002"]

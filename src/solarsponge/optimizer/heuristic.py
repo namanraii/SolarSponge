@@ -22,7 +22,9 @@ def greedy_schedule(
     )
     for i in order:
         L = loads[i]
-        lo, hi = L.window
+        lo, hi = _clip_window(L.window, T)
+        if hi < lo:
+            continue
         slots_needed = int(np.ceil(L.energy_kwh / max(L.power_kw * dt_h, 1e-9)))
         slots_needed = min(slots_needed, hi - lo + 1)
         placed = 0
@@ -63,7 +65,9 @@ def naive_noon_schedule(loads: list[FlexLoad], T: int, dt_h: float, noon_slot: i
         noon_slot = T // 2
     on = np.zeros((len(loads), T), dtype=int)
     for i, L in enumerate(loads):
-        lo, hi = L.window
+        lo, hi = _clip_window(L.window, T)
+        if hi < lo:
+            continue
         slots_needed = int(np.ceil(L.energy_kwh / max(L.power_kw * dt_h, 1e-9)))
         start = min(max(noon_slot - slots_needed // 2, lo), hi)
         end = min(start + slots_needed, hi + 1)
@@ -75,11 +79,19 @@ def default_schedule(loads: list[FlexLoad], T: int) -> np.ndarray:
     on = np.zeros((len(loads), T), dtype=int)
     for i, L in enumerate(loads):
         if L.default_on is not None:
-            on[i] = L.default_on[:T]
+            src = np.asarray(L.default_on, dtype=int)
+            n = min(T, len(src))
+            on[i, :n] = src[:n]
         else:
-            lo, hi = L.window
-            on[i, lo : min(lo + max(L.min_run, 1), hi + 1)] = 1
+            lo, hi = _clip_window(L.window, T)
+            if hi >= lo:
+                on[i, lo : min(lo + max(L.min_run, 1), hi + 1)] = 1
     return on
+
+
+def _clip_window(window: tuple[int, int], T: int) -> tuple[int, int]:
+    lo, hi = window
+    return max(0, lo), min(T - 1, hi)
 
 
 def _slack(L: FlexLoad, T: int, dt_h: float) -> int:

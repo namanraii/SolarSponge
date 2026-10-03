@@ -96,6 +96,8 @@ class OptimizerCfg(BaseModel):
     weights: WeightsCfg = Field(default_factory=WeightsCfg)
     surplus_floor_kw: float = 30
     fallback: list[str] = Field(default_factory=lambda: ["incumbent", "greedy", "default_schedule"])
+    use_virtual_battery: bool = False
+    virtual_battery_min_devices: int = 200
 
 
 class PumpCfg(BaseModel):
@@ -177,6 +179,10 @@ class EvaluationCfg(BaseModel):
         default_factory=lambda: ["clear", "partly_cloudy", "overcast", "monsoon"]
     )
     replay_days: int = 1
+    full_days: int = 30
+    full_seeds: int = 20
+    quick_days: int = 8
+    quick_seeds: int = 3
 
 
 class EconomicsCfg(BaseModel):
@@ -196,6 +202,12 @@ class OpsCfg(BaseModel):
     kill_switch: bool = False
     demo_mode: bool = True
     database_url: str = "sqlite:///./solarsponge.db"
+    redis_url: str = ""
+    api_key: str = ""
+    model_dir: str = "artifacts/models"
+    feature_store: str = "artifacts/features.parquet"
+    tick_enabled: bool = False
+    peer_zone_ids: list[str] = Field(default_factory=list)
 
 
 class Settings(BaseModel):

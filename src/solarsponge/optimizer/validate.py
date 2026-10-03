@@ -68,7 +68,11 @@ def validate_plan(
     for i, L in enumerate(loads):
         row = on[i].astype(int)
         lo, hi = L.window
-        if np.any(row[:lo]) or np.any(row[hi + 1 :]):
+        lo_c, hi_c = max(0, lo), min(T - 1, hi)
+        if lo_c <= hi_c and (np.any(row[:lo_c]) or np.any(row[hi_c + 1 :])):
+            window_ok = False
+            notes.append(f"{L.load_id} ON outside window")
+        elif hi_c < lo_c and np.any(row):
             window_ok = False
             notes.append(f"{L.load_id} ON outside window")
         if not min_run_holds(row, L.min_run):
@@ -101,7 +105,8 @@ def validate_plan(
             check = temp
             if L.kind == "hvac" and L.occupancy is not None:
                 a, b = L.occupancy
-                check = temp[a : b + 1]
+                a, b = max(0, a), min(T - 1, b)
+                check = temp[a : b + 1] if a <= b else temp[:0]
             if np.any(check < lo_t - 0.6) or np.any(check > hi_t + 0.6):
                 thermal_ok = False
                 notes.append(f"{L.load_id} temperature band")
@@ -113,7 +118,7 @@ def validate_plan(
         if L.kind == "ev_depot" and L.soc_target is not None:
             soc = simulate_soc(L, row, dt_h)
             idx = L.departure_slot if L.departure_slot is not None else T - 1
-            idx = min(idx, T - 1)
+            idx = min(max(0, idx), T - 1)
             if soc[idx] + 1e-3 < L.soc_target:
                 # overnight wrap: if departure is morning, energy after midnight still counts
                 if float(soc[-1]) + 1e-3 < L.soc_target:
