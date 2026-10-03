@@ -12,6 +12,29 @@ from typing import Any
 from solarsponge.config import Settings
 
 
+def _connect_postgres(url: str):
+    try:
+        from sqlalchemy import create_engine, text
+
+        eng = create_engine(url, pool_pre_ping=True)
+        with eng.begin() as c:
+            c.execute(text("SELECT 1"))
+        return eng
+    except Exception:
+        return None
+
+
+def _connect_redis(url: str):
+    try:
+        import redis
+
+        client = redis.Redis.from_url(url, socket_connect_timeout=0.4)
+        client.ping()
+        return client
+    except Exception:
+        return None
+
+
 def _connect(url: str) -> sqlite3.Connection | None:
     if not url.startswith("sqlite"):
         return None
@@ -84,8 +107,17 @@ class Store:
     kpis: dict[str, Any] = field(default_factory=dict)
     conn: sqlite3.Connection | None = None
 
+    engine: Any = None
+    redis: Any = None
+
     def __post_init__(self) -> None:
-        self.conn = _connect(self.settings.ops.database_url)
+        url = self.settings.ops.database_url
+        if url.startswith("sqlite"):
+            self.conn = _connect(url)
+        elif url.startswith("postgres"):
+            self.engine = _connect_postgres(url)
+        if self.settings.ops.redis_url:
+            self.redis = _connect_redis(self.settings.ops.redis_url)
 
     def log(self, actor: str, action: str, payload: dict) -> None:
         rec = {"ts": datetime.now(timezone.utc).isoformat(), "actor": actor, "action": action, "payload": payload}
@@ -143,8 +175,21 @@ class Store:
 
     def add_forecast(self, rec: dict) -> None:
         self.forecasts.append(rec)
+        if self.redis is not None:
+            try:
+                key = f"fc:{rec.get('zone_id')}:{rec.get('target')}"
+                self.redis.setex(key, 3600, json.dumps(rec, default=str))
+            except Exception:
+                pass
 
     def latest_forecast(self, zone_id: str, target: str = "surplus") -> dict | None:
+        if self.redis is not None:
+            try:
+                raw = self.redis.get(f"fc:{zone_id}:{target}")
+                if raw:
+                    return json.loads(raw)
+            except Exception:
+                pass
         for f in reversed(self.forecasts):
             if f.get("zone_id") == zone_id and f.get("target") == target:
                 return f

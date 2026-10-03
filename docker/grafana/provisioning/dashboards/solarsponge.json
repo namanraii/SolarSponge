@@ -1,0 +1,30 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Plans created",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "solarsponge_plans_total", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "title": "Solve seconds",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 0 },
+      "targets": [{ "expr": "solarsponge_solve_seconds_sum", "refId": "A" }]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["solarsponge"],
+  "timezone": "browser",
+  "title": "SolarSponge control loop",
+  "uid": "solarsponge-loop",
+  "version": 1
+}

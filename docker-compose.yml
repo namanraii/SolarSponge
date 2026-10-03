@@ -7,9 +7,15 @@ services:
       - "8000:8000"
     environment:
       - PYTHONPATH=/app/src
+      - DATABASE_URL=postgresql://postgres:sponge@postgres:5432/solarsponge
+      - REDIS_URL=redis://redis:6379/0
+      - SOLARSPONGE_TICK=1
     volumes:
       - ./config:/app/config
       - ./artifacts:/app/artifacts
+    depends_on:
+      - postgres
+      - redis
   web:
     build:
       context: .
@@ -22,3 +28,33 @@ services:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       - api
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_PASSWORD: sponge
+      POSTGRES_DB: solarsponge
+    ports:
+      - "5432:5432"
+    volumes:
+      - sponge_pg:/var/lib/postgresql/data
+      - ./docs/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  grafana:
+    image: grafana/grafana:11.1.4
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: sponge
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - sponge_gf:/var/lib/grafana
+    depends_on:
+      - api
+
+volumes:
+  sponge_pg:
+  sponge_gf:
