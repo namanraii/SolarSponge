@@ -1,0 +1,6 @@
+scenario_id: S4
+name: greedy_heuristic
+optimizer_disabled: false
+force_fallback: greedy
+use_forecast: true
+risk_quantile: 0.5

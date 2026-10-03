@@ -1,0 +1,5 @@
+scenario_id: S2
+name: solarsponge_p50
+optimizer_disabled: false
+use_forecast: true
+risk_quantile: 0.5

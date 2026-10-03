@@ -1,0 +1,5 @@
+scenario_id: S3
+name: solarsponge_risk_aware
+optimizer_disabled: false
+use_forecast: true
+risk_quantile: 0.3

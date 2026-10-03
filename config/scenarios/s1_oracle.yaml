@@ -1,0 +1,7 @@
+# S1: SolarSponge with perfect foresight (upper bound).
+scenario_id: S1
+name: oracle
+optimizer_disabled: false
+use_forecast: false
+oracle: true
+risk_quantile: 0.5

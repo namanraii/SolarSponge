@@ -1,0 +1,5 @@
+scenario_id: S5
+name: naive_noon_shift
+optimizer_disabled: true
+naive_noon: true
+use_forecast: false

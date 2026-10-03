@@ -1,0 +1,6 @@
+# S0: loads follow default schedules; optimizer is not used.
+scenario_id: S0
+name: baseline
+optimizer_disabled: true
+use_forecast: false
+risk_quantile: 0.5
