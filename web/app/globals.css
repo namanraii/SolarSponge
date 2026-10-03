@@ -2,13 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+
+:root {
+  --paper: #f3ead8;
+  --cream: #faf6ee;
+  --sand: #e6d7bf;
+  --ink: #1f1810;
+  --gold: #c48a1a;
+  --sun: #e8a317;
+  --leaf: #3d6b45;
+  --muted: #6b5e4e;
+}
 
 html,
 body {
-  background: #0c1220;
-  color: #e8e4d9;
+  background: var(--paper);
+  color: var(--ink);
   min-height: 100%;
+}
+
+body {
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.48 0 0 0 0 0.36 0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    radial-gradient(1200px 520px at 88% -10%, rgba(232, 163, 23, 0.22), transparent 55%),
+    radial-gradient(900px 480px at -10% 110%, rgba(61, 107, 69, 0.12), transparent 50%),
+    linear-gradient(180deg, #f7f0e2 0%, #f3ead8 40%, #efe4cc 100%);
 }
 
 .chart-summary {
@@ -16,4 +35,150 @@ body {
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+
+.card {
+  background: linear-gradient(180deg, #fffdf8 0%, #faf6ee 100%);
+  border: 1px solid rgba(184, 137, 74, 0.22);
+  box-shadow: 0 18px 40px -24px rgba(80, 52, 20, 0.35), 0 1px 0 rgba(255, 255, 255, 0.75) inset;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e8a317, #3d6b45);
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fffaf2;
+  border: 2px solid #c48a1a;
+  box-shadow: 0 2px 8px rgba(80, 52, 20, 0.25);
+  cursor: pointer;
+}
+
+.scene-3d {
+  perspective: 980px;
+  perspective-origin: 50% 40%;
+}
+
+.scene-stage {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: scene-sway 10s ease-in-out infinite;
+}
+
+@keyframes scene-sway {
+  0%,
+  100% {
+    transform: rotateX(12deg) rotateY(-18deg);
+  }
+  50% {
+    transform: rotateX(16deg) rotateY(-10deg);
+  }
+}
+
+.sun-orb {
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #fff6d6 0%, #f5c44a 38%, #e08a12 78%, #c45c26 100%);
+  box-shadow:
+    0 0 0 10px rgba(232, 163, 23, 0.16),
+    0 0 40px 12px rgba(232, 163, 23, 0.45),
+    0 18px 30px rgba(196, 92, 38, 0.25);
+  animation: sun-pulse 4.5s ease-in-out infinite;
+}
+
+@keyframes sun-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.06);
+    filter: brightness(1.08);
+  }
+}
+
+.pv-array {
+  position: absolute;
+  left: 10%;
+  width: 58%;
+  bottom: 16%;
+  height: 42%;
+  transform: rotateX(56deg) rotateZ(-16deg) translateZ(24px);
+  transform-style: preserve-3d;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.pv-tile {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0 12%, transparent 18%),
+    repeating-linear-gradient(90deg, #163052 0 18%, #1e4a78 18% 20%),
+    repeating-linear-gradient(0deg, #163052 0 18%, #c9a227 18% 20%);
+  border: 1px solid rgba(250, 246, 238, 0.45);
+  border-radius: 4px;
+  box-shadow: 0 10px 16px rgba(31, 24, 16, 0.28);
+  transform: translateZ(8px);
+}
+
+.ground-disc {
+  position: absolute;
+  left: 10%;
+  right: 6%;
+  bottom: 8%;
+  height: 28%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #e8c98a 0%, #d7b47a 42%, transparent 70%);
+  filter: blur(1px);
+  opacity: 0.9;
+}
+
+.leaf-float {
+  animation: leaf-bob 6s ease-in-out infinite;
+}
+
+@keyframes leaf-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(4deg);
+  }
+}
+
+.hero-tilt {
+  transform: perspective(1200px) rotateX(6deg) rotateY(-8deg);
+  transform-origin: center;
+  transition: transform 0.6s ease;
+}
+.hero-tilt:hover {
+  transform: perspective(1200px) rotateX(2deg) rotateY(-2deg) scale(1.01);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-stage,
+  .sun-orb,
+  .leaf-float {
+    animation: none;
+  }
 }

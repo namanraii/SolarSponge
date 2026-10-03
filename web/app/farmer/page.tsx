@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useReplay } from "@/components/ReplayContext";
+import { Loading } from "@/components/Ui";
 
 const COPY: Record<string, Record<string, string>> = {
   en: {
@@ -43,6 +44,7 @@ export default function Farmer() {
   const pump = data?.schedules?.find((s: any) => s.kind === "pump");
   const window = useMemo(() => (pump && data ? runs(pump.on, data.labels) : "—"), [pump, data]);
   const t = COPY[lang];
+  if (!data) return <Loading />;
   return (
     <div className="max-w-md mx-auto">
       <div className="flex justify-center gap-2 mb-4">
@@ -50,25 +52,30 @@ export default function Farmer() {
           <button
             key={l}
             onClick={() => setLang(l)}
-            className={`px-3 py-1 rounded-full text-sm ${lang === l ? "bg-gold text-ink" : "bg-white/10"}`}
+            className={`px-3 py-1 rounded-full text-sm ${lang === l ? "bg-leaf text-cream" : "bg-sand text-ink"}`}
           >
             {l.toUpperCase()}
           </button>
         ))}
       </div>
-      <div className="bg-[#f4efe4] text-[#1a1208] rounded-3xl p-6 min-h-[70vh] shadow-2xl">
-        <p className="text-xs uppercase tracking-widest text-[#8a6a32]">SolarSponge · farmer</p>
-        <h1 className="font-display text-3xl mt-3">{t.title}</h1>
-        <p className="text-4xl font-semibold mt-6">
-          {t.run} {window || "—"}
-        </p>
-        <p className="mt-4 text-lg leading-relaxed">{t.why}</p>
-        <div className="mt-8 inline-block bg-[#d9f99d] text-[#14532d] px-3 py-1 rounded-full text-sm font-semibold">
-          {t.badge}
+      <div className="bg-cream text-ink rounded-3xl overflow-hidden min-h-[70vh] shadow-lift border border-sand">
+        <div className="h-40 overflow-hidden">
+          <img src="/art/irrigation.jpg" alt="Solar-powered irrigation canal" className="w-full h-full object-cover scale-[1.06]" />
         </div>
-        <p className="mt-10 text-sm text-[#6b5a3e]">
-          {pump?.name} · {pump?.power_kw} kW · plan {data?.plan?.plan_id}
-        </p>
+        <div className="p-6">
+          <p className="text-xs uppercase tracking-widest text-clay">SolarSponge · farmer</p>
+          <h1 className="font-display text-3xl mt-3">{t.title}</h1>
+          <p className="text-4xl font-semibold mt-6 text-leaf">
+            {t.run} {window || "—"}
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-muted break-words">{t.why}</p>
+          <div className="mt-8 inline-block bg-leaf/15 text-moss px-3 py-1 rounded-full text-sm font-semibold">
+            {t.badge}
+          </div>
+          <p className="mt-10 text-sm text-clay">
+            {pump?.name} · {pump?.power_kw} kW · plan {data?.plan?.plan_id}
+          </p>
+        </div>
       </div>
     </div>
   );

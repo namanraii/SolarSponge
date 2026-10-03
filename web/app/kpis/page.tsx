@@ -1,9 +1,10 @@
 "use client";
 import { useReplay } from "@/components/ReplayContext";
+import { Card, Loading, PageHeader, SustainabilityStrip } from "@/components/Ui";
 
 export default function KpisPage() {
   const { data } = useReplay();
-  if (!data) return <p>Loading…</p>;
+  if (!data) return <Loading />;
   const k = data.kpis;
   const rows = [
     ["Curtailment avoided", `${k.curtailment_avoided_kwh.toFixed(0)} kWh (${k.curtailment_avoided_pct.toFixed(1)}%)`],
@@ -20,20 +21,25 @@ export default function KpisPage() {
     ["Config hash", data.config_hash],
   ];
   return (
-    <div className="space-y-4">
-      <h1 className="font-display text-3xl text-gold">Impact on this simulated day</h1>
-      <p className="text-white/60 max-w-2xl">
+    <div className="space-y-5">
+      <PageHeader kicker="Climate impact" title="Impact on this simulated day">
         Digital twin, one curtailment zone. These are not national-scale results. CO₂ uses the official CEA FY 2025-26
         weighted-average grid factor, not a placeholder.
-      </p>
-      <div className="bg-panel rounded-2xl border border-white/10 divide-y divide-white/10">
-        {rows.map(([l, v]) => (
-          <div key={l} className="flex justify-between gap-4 px-4 py-3 text-sm">
-            <span className="text-white/60">{l}</span>
-            <span className="text-right">{v}</span>
-          </div>
-        ))}
+      </PageHeader>
+      <div className="grid lg:grid-cols-[1fr_280px] gap-5 items-start">
+        <Card className="divide-y divide-sand overflow-hidden">
+          {rows.map(([l, v]) => (
+            <div key={l} className="flex justify-between gap-4 px-4 py-3 text-sm">
+              <span className="text-muted">{l}</span>
+              <span className="text-right font-medium text-ink">{v}</span>
+            </div>
+          ))}
+        </Card>
+        <div className="rounded-3xl overflow-hidden shadow-lift h-64 lg:h-full min-h-[220px]">
+          <img src="/art/emblem.jpg" alt="Sun, leaf and photovoltaic emblem" className="w-full h-full object-cover scale-[1.08]" />
+        </div>
       </div>
+      <SustainabilityStrip />
     </div>
   );
 }

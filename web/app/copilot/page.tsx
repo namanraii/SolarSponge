@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { chat } from "@/lib/api";
+import { Card, PageHeader } from "@/components/Ui";
 
 const STARTERS = [
   "Why did pump cluster B start when it did?",
@@ -27,32 +28,32 @@ export default function CopilotPage() {
 
   return (
     <div className="space-y-4 max-w-3xl">
-      <h1 className="font-display text-3xl text-gold">Operator copilot</h1>
-      <p className="text-white/60">
+      <PageHeader kicker="Read-only" title="Operator copilot">
         Explains plans and runs sandboxed what-ifs. It has no write path to devices. Every figure is supposed to come from
         a tool.
-      </p>
+      </PageHeader>
       <div className="flex flex-wrap gap-2">
         {STARTERS.map((s) => (
-          <button key={s} onClick={() => setQ(s)} className="text-xs px-3 py-1 rounded-full bg-white/10">
+          <button key={s} onClick={() => setQ(s)} className="text-xs px-3 py-1 rounded-full bg-sand text-ink hover:bg-clay/30">
             {s}
           </button>
         ))}
       </div>
-      <div className="bg-panel rounded-2xl border border-white/10 p-4 min-h-64 space-y-3">
+      <Card className="p-4 min-h-64 space-y-3">
+        {log.length === 0 ? <p className="text-muted text-sm">Ask why a pump ran, or try a refused actuation.</p> : null}
         {log.map((m, i) => (
-          <div key={i} className={m.role === "user" ? "text-gold" : "text-white/90"}>
-            <div className="text-xs uppercase tracking-wide text-white/40 mb-1">
+          <div key={i} className={m.role === "user" ? "text-gold" : "text-ink"}>
+            <div className="text-xs uppercase tracking-wide text-muted mb-1">
               {m.role === "user" ? "you" : m.role}
               {m.refusal ? " · refused" : ""}
             </div>
             <p>{m.text || m.answer}</p>
             {m.tool_calls?.length ? (
-              <p className="text-xs text-sponge mt-1">tools: {m.tool_calls.map((t: any) => t.name).join(", ")}</p>
+              <p className="text-xs text-leaf mt-1">tools: {m.tool_calls.map((t: any) => t.name).join(", ")}</p>
             ) : null}
           </div>
         ))}
-      </div>
+      </Card>
       <form
         className="flex gap-2"
         onSubmit={(e) => {
@@ -61,11 +62,11 @@ export default function CopilotPage() {
         }}
       >
         <input
-          className="flex-1 bg-panel border border-white/10 rounded-full px-4 py-2"
+          className="flex-1 bg-cream border border-sand rounded-full px-4 py-2 outline-none focus:border-gold"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <button disabled={busy} className="bg-gold text-ink font-semibold px-4 rounded-full">
+        <button disabled={busy} className="bg-gold text-cream font-semibold px-4 rounded-full">
           Ask
         </button>
       </form>
