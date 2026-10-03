@@ -7,6 +7,7 @@ from typing import Any
 import numpy as np
 
 from solarsponge.config import Settings
+from solarsponge.optimizer.aggregate import disaggregate_fair, schedule_virtual_battery
 from solarsponge.optimizer.heuristic import default_schedule, greedy_schedule, naive_noon_schedule
 from solarsponge.optimizer.milp import schedule as milp_schedule
 from solarsponge.optimizer.validate import validate_plan
@@ -55,6 +56,16 @@ def plan_day(
     if force_fallback == "default_schedule":
         on = default_schedule(loads, T)
         return _pack("Fallback", on, surplus_kw, loads, dt_h, 0, "default_schedule")
+
+    n_pumps = sum(1 for L in loads if L.kind == "pump")
+    use_vb = opt.use_virtual_battery or n_pumps >= opt.virtual_battery_min_devices
+    if use_vb:
+        try:
+            vb_packed = _plan_virtual_battery(surplus_kw, loads, settings, warm_start_on)
+            if vb_packed is not None:
+                return vb_packed
+        except Exception:
+            pass
 
     try:
         result = milp_schedule(
@@ -106,6 +117,59 @@ def plan_day(
     on_d = default_schedule(loads, T)
     packed = _pack("Infeasible", on_d, surplus_kw, loads, dt_h, result.get("solve_ms", 0), reason or "infeasible")
     packed["validation"] = validate_plan(surplus_kw, loads, on_d, packed["absorbed_kwh"], dt_h)
+    return packed
+
+
+def _plan_virtual_battery(surplus_kw, loads, settings: Settings, warm_start_on):
+    """Homogeneous pumps as a power/energy envelope; remaining loads stay MILP."""
+    pumps = [L for L in loads if L.kind == "pump"]
+    rest = [L for L in loads if L.kind != "pump"]
+    if not pumps:
+        return None
+    dt_h = settings.time.dt_h
+    power_max = float(sum(L.power_kw for L in pumps))
+    energy = float(sum(L.energy_kwh for L in pumps))
+    lo = min(L.window[0] for L in pumps)
+    hi = max(L.window[1] for L in pumps)
+    vb = schedule_virtual_battery(surplus_kw, power_max, energy, (lo, hi), dt_h=dt_h, time_limit_s=min(5, settings.optimizer.time_limit_s))
+    on_p = disaggregate_fair(vb["power_kw"], pumps, dt_h)
+    residual = np.maximum(0.0, np.asarray(surplus_kw) - vb["power_kw"])
+    T = len(surplus_kw)
+    if rest:
+        warm_rest = None
+        if warm_start_on is not None:
+            idx = [i for i, L in enumerate(loads) if L.kind != "pump"]
+            warm_rest = warm_start_on[idx]
+        rest_res = milp_schedule(
+            residual,
+            rest,
+            dt_h=dt_h,
+            w_switch=settings.optimizer.weights.w_switch,
+            w_late=settings.optimizer.weights.w_late,
+            w_shortfall=settings.optimizer.weights.w_shortfall,
+            time_limit_s=settings.optimizer.time_limit_s,
+            mip_gap=settings.optimizer.mip_gap,
+            threads=settings.optimizer.threads,
+            warm_start_on=warm_rest if settings.optimizer.warm_start else None,
+        )
+        on_r = rest_res.get("on")
+        if on_r is None:
+            on_r = default_schedule(rest, T)
+        on = np.zeros((len(loads), T), dtype=int)
+        pi = ri = 0
+        for i, L in enumerate(loads):
+            if L.kind == "pump":
+                on[i] = on_p[pi]
+                pi += 1
+            else:
+                on[i] = on_r[ri]
+                ri += 1
+        packed = _pack(rest_res.get("status") or vb.get("status") or "Feasible", on, surplus_kw, loads, dt_h, rest_res.get("solve_ms", 0), None, rest_res)
+    else:
+        on = on_p
+        packed = _pack(str(vb.get("status") or "Feasible"), on, surplus_kw, loads, dt_h, 0, None)
+    packed["virtual_battery"] = True
+    packed["vb_absorbed_kwh"] = vb.get("absorbed_kwh")
     return packed
 
 
