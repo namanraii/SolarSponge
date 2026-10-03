@@ -1,0 +1,9 @@
+site_name: SolarSponge
+theme:
+  name: material
+nav:
+  - Home: index.md
+  - Application: application.md
+  - ADRs:
+      - Optimizer not RL: adr/0001-optimizer-not-rl.md
+      - Quantile forecasts: adr/0002-quantile-forecasts.md
