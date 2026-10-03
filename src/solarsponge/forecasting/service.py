@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -33,6 +35,7 @@ class ForecastService:
     pv_model: QuantileModel | None = None
     load_model: QuantileModel | None = None
     history: list[DayTwin] = field(default_factory=list)
+    train_frame: pd.DataFrame | None = None
 
     def fit_from_history(self, days: list[DayTwin]) -> None:
         self.history = days
@@ -56,8 +59,79 @@ class ForecastService:
             rows.append(df)
         hist = pd.concat(rows)
         X = make_features(hist)
+        self.train_frame = X.join(hist[["pv_kw", "load_kw"]])
         self.pv_model = fit_quantile_models(X, hist["pv_kw"], self.settings.forecast)
         self.load_model = fit_quantile_models(X, hist["load_kw"], self.settings.forecast)
+
+    def save(self, directory: str | Path | None = None) -> Path:
+        directory = Path(directory or self.settings.ops.model_dir)
+        directory.mkdir(parents=True, exist_ok=True)
+
+        def _dump(model: QuantileModel | None) -> dict:
+            if model is None:
+                return {}
+            return {
+                "backend": model.backend,
+                "feature_names": model.feature_names,
+                "empirical": {str(k): np.asarray(v).tolist() for k, v in model.empirical.items()},
+                "conformal": {str(k): float(v) for k, v in model.conformal.items()},
+            }
+
+        payload = {"pv": _dump(self.pv_model), "load": _dump(self.load_model)}
+        path = directory / "quantile_model.json"
+        path.write_text(json.dumps(payload))
+        if self.pv_model and self.pv_model.backend == "lightgbm" and self.pv_model.models:
+            try:
+                import pickle
+
+                (directory / "lgbm.pkl").write_bytes(pickle.dumps({"pv": self.pv_model.models, "load": self.load_model.models if self.load_model else {}}))
+            except Exception:
+                pass
+        return path
+
+    def load(self, directory: str | Path | None = None) -> bool:
+        directory = Path(directory or self.settings.ops.model_dir)
+        path = directory / "quantile_model.json"
+        if not path.exists():
+            return False
+        payload = json.loads(path.read_text())
+
+        def _load(blob: dict) -> QuantileModel | None:
+            if not blob:
+                return None
+            qm = QuantileModel(feature_names=list(blob.get("feature_names") or []))
+            qm.backend = blob.get("backend") or "empirical"
+            qm.empirical = {float(k): np.asarray(v, dtype=float) for k, v in (blob.get("empirical") or {}).items()}
+            qm.conformal = {float(k): float(v) for k, v in (blob.get("conformal") or {}).items()}
+            return qm
+
+        self.pv_model = _load(payload.get("pv") or {})
+        self.load_model = _load(payload.get("load") or {})
+        pkl = directory / "lgbm.pkl"
+        if pkl.exists() and self.pv_model and self.pv_model.backend == "lightgbm":
+            try:
+                import pickle
+
+                trees = pickle.loads(pkl.read_bytes())
+                self.pv_model.models = trees.get("pv") or {}
+                if self.load_model:
+                    self.load_model.models = trees.get("load") or {}
+            except Exception:
+                pass
+        return self.pv_model is not None
+
+    def export_parquet(self, path: str | Path | None = None) -> Path | None:
+        if self.train_frame is None:
+            return None
+        path = Path(path or self.settings.ops.feature_store)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self.train_frame.to_parquet(path)
+            return path
+        except Exception:
+            csv = path.with_suffix(".csv")
+            self.train_frame.to_csv(csv)
+            return csv
 
     def predict_day(self, twin: DayTwin, issued_at: datetime | None = None, oracle: bool = False) -> ForecastBundle:
         T = len(twin.pv_kw)

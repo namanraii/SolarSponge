@@ -60,12 +60,22 @@ def run_backtest(settings: Settings, n_days: int | None = None) -> dict:
         pv_mae_b1.append(mae(d.pv_kw, b1_pv))
         cov.append(coverage(d.pv_kw, bundle.pv["p10"], bundle.pv["p90"]))
 
-    return {
+    cov_mean = float(np.mean(cov) if cov else 0)
+    result = {
         "n_test_days": len(pv_mae_m),
         "mae_p50": float(np.mean(pv_mae_m) if pv_mae_m else 0),
         "mae_b0": float(np.mean(pv_mae_b0) if pv_mae_b0 else 0),
         "mae_b1": float(np.mean(pv_mae_b1) if pv_mae_b1 else 0),
         "skill_vs_b1": skill(float(np.mean(pv_mae_m) if pv_mae_m else 0), float(np.mean(pv_mae_b1) or 1)),
-        "coverage_p10_p90": float(np.mean(cov) if cov else 0),
+        "coverage_p10_p90": cov_mean,
+        "conformal_ok": abs(cov_mean - 0.80) <= 0.15 if cov else False,
         "backend": svc.pv_model.backend if svc.pv_model else "none",
+        "beats_clearsky": bool(pv_mae_m and np.mean(pv_mae_m) <= np.mean(pv_mae_b1) + 1e-6),
     }
+    from pathlib import Path
+    import json
+
+    out = Path("artifacts")
+    out.mkdir(exist_ok=True)
+    (out / "backtest.json").write_text(json.dumps(result, indent=2))
+    return result

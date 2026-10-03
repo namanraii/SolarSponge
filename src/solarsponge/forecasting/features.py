@@ -48,9 +48,16 @@ def make_features(df: pd.DataFrame, issued_at: pd.Timestamp | None = None) -> pd
         out["pv_lag_1d"] = 0.0
 
     if "load_kw" in df.columns:
-        out["load_lag_1d"] = df["load_kw"].shift(96).bfill().fillna(0)
+        lag_l = df["load_kw"].shift(96)
+        if issued_at is not None:
+            known = df.index <= issued_at
+            lag_l = lag_l.where(known, np.nan)
+        out["load_lag_1d"] = lag_l.bfill().fillna(0)
     else:
         out["load_lag_1d"] = 0.0
 
+    leak = {"pv_kw", "load_kw", "surplus_kw"} & set(out.columns)
+    if leak:
+        raise ValueError(f"issue-time leakage: contemporaneous actuals in features {leak}")
     assert not out.isna().all().any()
     return out.fillna(0)
