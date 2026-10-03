@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solarsponge"
+version = "0.1.0"
+description = "Forecast, optimize, and shift flexible loads into curtailed-solar windows."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "SolarSponge" }]
+dependencies = [
+    "pulp==2.9.0",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "pyyaml>=6.0",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "httpx>=0.27",
+    "apscheduler>=3.10",
+    "sqlalchemy>=2.0",
+    "structlog>=24.1",
+    "prometheus-client>=0.20",
+    "python-multipart>=0.0.9",
+    "websockets>=12.0",
+    "highspy>=1.7",
+]
+
+[project.optional-dependencies]
+ml = [
+    "lightgbm>=4.3",
+    "scikit-learn>=1.4",
+    "pvlib>=0.11",
+    "pyarrow>=15.0",
+]
+llm = [
+    "anthropic>=0.34",
+]
+dev = [
+    "pytest>=8.0",
+    "hypothesis>=6.100",
+    "ruff>=0.4",
+    "httpx>=0.27",
+]
+all = [
+    "solarsponge[ml,llm,dev]",
+]
+
+[project.scripts]
+solarsponge = "solarsponge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
