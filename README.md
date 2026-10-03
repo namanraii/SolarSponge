@@ -21,6 +21,13 @@ This is a **calibrated digital twin of one curtailment zone**, not a live grid. 
 | Copilot with read-only tools and actuation refusal | Built |
 | Next.js dashboard (overview, schedule, forecast, KPIs, what-if, copilot, farmer) | Built |
 | Evaluation S0–S5 + bootstrap CIs | Built |
+| Rolling 15-min re-plan, warm start, APScheduler tick (`--tick`) | Built |
+| Forecast persist, parquet feature store, leakage guard, backtest artifact | Built |
+| Postgres/Redis/Timescale + Grafana in Compose (SQLite fallback) | Built |
+| Copilot tool-calling loop, 30-question golden set, plan_id cache | Built |
+| Dashboard play/pause/speed, offline `public/replay.json`, kill switch | Built |
+| API key (`X-API-Key`) + per-IP rate limit | Built |
+| Virtual-battery path, MQTT/OpenADR/WhatsApp/IEX stubs, neighbor blend | Built |
 
 **Not a field result.** A toy run of the reference scheduler on synthetic surplus is mechanically useful and must not appear in the pitch.
 
@@ -57,8 +64,10 @@ npm run dev        # :3000, talks to :8000
 One-command stack: `docker compose up --build`.
 
 ```bash
-python -m solarsponge.cli eval --days 8 --out artifacts
+python -m solarsponge.cli eval --quick --out artifacts   # 8 days × 3 seeds
+python -m solarsponge.cli eval --full --out artifacts    # 30 days × 20 seeds
 python -m solarsponge.cli backtest
+python -m solarsponge.cli serve --tick   # APScheduler re-plans on the configured interval
 ```
 
 `make eval` regenerates tables from config + seed. Every plan stores `config_hash`.
