@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getOpsStatus, setKillSwitch } from "@/lib/api";
 
 const LINKS = [
   { href: "/", label: "Overview" },
@@ -14,6 +16,12 @@ const LINKS = [
 
 export function Nav() {
   const path = usePathname();
+  const [killed, setKilled] = useState(false);
+  useEffect(() => {
+    getOpsStatus()
+      .then((s) => setKilled(Boolean(s.kill_switch)))
+      .catch(() => undefined);
+  }, []);
   return (
     <header className="border-b border-white/10 bg-ink/80 backdrop-blur sticky top-0 z-20">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-6">
@@ -33,6 +41,21 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
+          <button
+            type="button"
+            className={`px-3 py-1.5 rounded-full text-sm ${killed ? "bg-waste text-white" : "text-white/70 hover:text-white"}`}
+            onClick={async () => {
+              try {
+                const r = await setKillSwitch(!killed);
+                setKilled(Boolean(r.kill_switch));
+              } catch {
+                /* API down: fixture-only mode */
+              }
+            }}
+            aria-pressed={killed}
+          >
+            {killed ? "Kill switch ON" : "Kill switch"}
+          </button>
         </nav>
       </div>
     </header>

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   CartesianGrid,
@@ -13,9 +13,20 @@ import {
 import { useReplay } from "@/components/ReplayContext";
 
 export default function Overview() {
-  const { data, error } = useReplay();
+  const { data, error, offline } = useReplay();
   const [sponge, setSponge] = useState(true);
   const [slot, setSlot] = useState(48);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(1);
+
+  useEffect(() => {
+    if (!playing || !data) return;
+    const n = (data.labels as string[]).length;
+    const id = window.setInterval(() => {
+      setSlot((s) => (s + 1) % n);
+    }, Math.max(80, 400 / speed));
+    return () => window.clearInterval(id);
+  }, [playing, speed, data]);
 
   const chart = useMemo(() => {
     if (!data) return [];
@@ -97,6 +108,28 @@ export default function Overview() {
           </ResponsiveContainer>
         </div>
         <div className="mt-3 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setPlaying((p) => !p)}
+            className="px-3 py-1 rounded-full bg-gold text-ink text-sm font-semibold"
+            aria-pressed={playing}
+          >
+            {playing ? "Pause" : "Play"}
+          </button>
+          <label className="text-sm text-white/60">
+            Speed
+            <select
+              className="ml-2 bg-ink border border-white/20 rounded px-2 py-1"
+              value={speed}
+              onChange={(e) => setSpeed(Number(e.target.value))}
+              aria-label="Replay speed"
+            >
+              <option value={0.5}>0.5×</option>
+              <option value={1}>1×</option>
+              <option value={2}>2×</option>
+              <option value={4}>4×</option>
+            </select>
+          </label>
           <input
             type="range"
             min={0}
@@ -107,6 +140,7 @@ export default function Overview() {
             aria-label="Replay slot"
           />
           <span className="text-sm text-gold w-28">{shown?.t}</span>
+          {offline ? <span className="text-xs text-white/40">offline fixture</span> : null}
         </div>
       </div>
     </div>
