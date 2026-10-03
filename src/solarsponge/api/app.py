@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import os
+import time
+from collections import defaultdict, deque
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from pydantic import BaseModel
 
 from solarsponge import __version__
 from solarsponge.api.schemas import ChatRequest, ScenarioRequest
@@ -29,9 +33,78 @@ app.add_middleware(
 )
 
 
+_HITS: dict[str, deque] = defaultdict(deque)
+_SCHEDULER = None
+
+
+class KillBody(BaseModel):
+    enabled: bool
+
+
+def _client_ip(request: Request) -> str:
+    return request.client.host if request.client else "local"
+
+
+@app.middleware("http")
+async def auth_and_limit(request: Request, call_next):
+    path = request.url.path
+    open_paths = {"/healthz", "/metrics", "/docs", "/openapi.json", "/redoc"}
+    if path in open_paths:
+        return await call_next(request)
+    ctx = get_ctx()
+    key = (ctx.settings.ops.api_key or os.environ.get("SOLARSPONGE_API_KEY") or "").strip()
+    if key and request.headers.get("x-api-key") != key:
+        return JSONResponse(
+            status_code=401,
+            content={"type": "about:blank", "title": "unauthorized", "status": 401, "detail": "missing or invalid X-API-Key"},
+            media_type="application/problem+json",
+        )
+    limit = ctx.settings.ops.api_rate_limit_per_min
+    if limit > 0:
+        ip = _client_ip(request)
+        now = time.time()
+        q = _HITS[ip]
+        while q and now - q[0] > 60:
+            q.popleft()
+        if len(q) >= limit:
+            return JSONResponse(
+                status_code=429,
+                content={"type": "about:blank", "title": "rate limited", "status": 429, "detail": "too many requests"},
+                media_type="application/problem+json",
+            )
+        q.append(now)
+    return await call_next(request)
+
+
+def _tick() -> None:
+    ctx = get_ctx()
+    if ctx.settings.ops.kill_switch:
+        ctx.store.log("scheduler", "tick_skipped_kill_switch", {})
+        return
+    from solarsponge.loop import build_demo
+
+    build_demo(ctx.settings, ctx.store, rolling=True)
+    ctx.store.log("scheduler", "replan_tick", {"plan_id": (ctx.store.latest_plan(ctx.settings.zone.id) or {}).get("plan_id")})
+
+
 @app.on_event("startup")
 def _startup() -> None:
+    global _SCHEDULER
     get_ctx()
+    tick = os.environ.get("SOLARSPONGE_TICK", "").lower() in {"1", "true", "yes"}
+    if tick:
+        from apscheduler.schedulers.background import BackgroundScheduler
+
+        minutes = max(1, get_ctx().settings.time.replan_every_minutes)
+        _SCHEDULER = BackgroundScheduler()
+        _SCHEDULER.add_job(_tick, "interval", minutes=minutes, id="replan", replace_existing=True)
+        _SCHEDULER.start()
+
+
+@app.on_event("shutdown")
+def _shutdown() -> None:
+    if _SCHEDULER is not None:
+        _SCHEDULER.shutdown(wait=False)
 
 
 @app.get("/healthz")
@@ -132,6 +205,36 @@ def load_info(load_id: str):
 def copilot_chat(req: ChatRequest):
     ctx = get_ctx()
     return ctx.copilot.chat(req.message, req.zone_id)
+
+
+@app.get("/v1/ops/status")
+def ops_status():
+    ctx = get_ctx()
+    return {
+        "kill_switch": ctx.settings.ops.kill_switch,
+        "demo_mode": ctx.settings.ops.demo_mode,
+        "tick_enabled": _SCHEDULER is not None,
+        "config_hash": ctx.settings.config_hash(),
+        "ready": ctx.ready,
+    }
+
+
+@app.post("/v1/ops/kill-switch")
+def set_kill_switch(body: KillBody):
+    ctx = get_ctx()
+    ctx.settings.ops.kill_switch = bool(body.enabled)
+    ctx.store.log("ops", "kill_switch", {"enabled": body.enabled})
+    if ctx.store.replay:
+        ctx.store.replay["kill_switch"] = ctx.settings.ops.kill_switch
+    return {"kill_switch": ctx.settings.ops.kill_switch}
+
+
+@app.get("/v1/zones/{zone_id}/prices")
+def dam_prices(zone_id: str):
+    from solarsponge.markets.iex import dam_price_inr_per_kwh
+
+    prices = dam_price_inr_per_kwh(get_ctx().settings.time.slots_per_day)
+    return {"zone_id": zone_id, "source": "iex-dam-stub", "inr_per_kwh": prices.tolist()}
 
 
 @app.websocket("/v1/stream/{zone_id}")

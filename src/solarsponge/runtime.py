@@ -34,6 +34,14 @@ def get_ctx() -> AppContext:
 def bootstrap(settings: Settings | None = None) -> AppContext:
     global _CTX
     settings = settings or load_config()
+    import os
+
+    if os.environ.get("DATABASE_URL"):
+        settings.ops.database_url = os.environ["DATABASE_URL"]
+    if os.environ.get("REDIS_URL"):
+        settings.ops.redis_url = os.environ["REDIS_URL"]
+    if os.environ.get("SOLARSPONGE_API_KEY"):
+        settings.ops.api_key = os.environ["SOLARSPONGE_API_KEY"]
     store = Store(settings)
     fc = ForecastService(settings)
     tools = ToolLayer(settings, store, fc)
